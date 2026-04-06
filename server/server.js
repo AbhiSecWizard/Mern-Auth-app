@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser")
 const connectDB = require("./config/mongodb")
 const userRouter = require("./routes/userRouter")
 
-const path = require("path")
+// const path = require("path")
 
 const app = express()
 
@@ -20,10 +20,7 @@ app.use(cors({origin:allowedOrigins,
 // API end Points       
 app.use("/api/auth",authRouter)
 app.use("/api/user",userRouter)
-app.use(express.static(path.join(__dirname, "../client/dist")));
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
-});
+
 app.get("/",(req,res)=>{
     res.send("API WORKING")
 })
