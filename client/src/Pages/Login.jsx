@@ -1,90 +1,79 @@
-import React, { useState, useContext} from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { AppContent } from "../context/AppContext";
 import { toast } from "react-toastify";
 
-const Login = () => {
+axios.defaults.withCredentials = true;
 
-  const {backendUrl,setIsLoggedin,getUserData} = useContext(AppContent);
+const Login = () => {
+  const { backendUrl, setIsLoggedin, getUserData } = useContext(AppContent);
+
   const navigate = useNavigate();
 
-  const [state, setState] =useState("Sign Up");
-  const [name, setName] =useState("");
-  const [email, setEmail] =useState("");
-  const [password, setPassword] =useState("");
-  
+  const [state, setState] = useState("Sign Up");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-
     try {
+      const url =
+        state === "Sign Up"
+          ? `${backendUrl}/api/auth/register`
+          : `${backendUrl}/api/auth/login`;
 
-      axios.defaults.withCredentials = true;
+      const payload =
+        state === "Sign Up" ? { name, email, password } : { email, password };
 
-      if (state === "Sign Up") {
+      const { data } = await axios.post(url, payload, {
+        withCredentials: true,
+      });
 
-        const { data } = await axios.post(
-          backendUrl+"/api/auth/register",
-          { name, email, password }
-        );
-
-        if (data.success) {
-          setIsLoggedin(true);
-          toast.success("Account Created Successfully");
-          getUserData()
-          navigate("/");
-        } else {
-          toast.error(data.message);
-        }
-
-      } else {
-
-        const { data } = await axios.post(
-          backendUrl + "/api/auth/login",
-          { email, password }
-        );
-
-        if (data.success) {
-          setIsLoggedin(true);
-          getUserData()
-          toast.success("Login Successful");
-          navigate("/");
-        } else {
-          toast.error(data.message);
-        }
-
+      if (!data.success) {
+        toast.error(data.message);
+        return;
       }
 
+      // 👇 token save karo
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      setIsLoggedin(true);
+      await getUserData();
+
+      toast.success(
+        state === "Sign Up" ? "Account Created Successfully" : "Login Successful"
+      );
+
+      navigate("/");
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
-
       <img
         onClick={() => navigate("/")}
         src={assets.logo}
-        alt=""
+        alt="logo"
         className="absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"
       />
 
       <div className="bg-slate-900 p-10 rounded-lg shadow-lg w-full sm:w-96 text-indigo-300 text-sm">
-
         <h2 className="text-center sm:text-4xl text-3xl font-bold mb-3 text-white">
           {state === "Sign Up" ? "Create Account" : "Login"}
         </h2>
 
         <p className="text-center mb-6">
-          {state === "Sign Up"
-            ? "Create your account"
-            : "Login to your account"}
+          {state === "Sign Up" ? "Create your account" : "Login to your account"}
         </p>
 
         <form onSubmit={onSubmitHandler}>
-
           {state === "Sign Up" && (
             <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C]">
               <img src={assets.person_icon} alt="" />
@@ -136,7 +125,6 @@ const Login = () => {
           >
             {state === "Sign Up" ? "Create Account" : "Login"}
           </button>
-
         </form>
 
         {state === "Sign Up" ? (
@@ -160,7 +148,6 @@ const Login = () => {
             </span>
           </p>
         )}
-
       </div>
     </div>
   );
