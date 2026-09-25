@@ -1,35 +1,38 @@
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
-const userAuth = async (req,res,next)=>{
-  const {token} = req.cookies;
-
-  if(!token){
-    return res.json({
-      success:false,
-      message:'Not Authorized Login Again'
-    })
-  }
-
+const userAuth = (req, res, next) => {
   try {
-    const tokenDecode = jwt.verify(token,process.env.JWT_SECRET)
+    let token = req.cookies?.token;
 
-    if(tokenDecode.id){
-      req.userId = tokenDecode.id   // ✅ Correct
-    }else{
-      return res.json({
-        success:false,
-        message:"Not Authorized Login Again"
-      })
+    const authHeader = req.headers.authorization;
+    if (!token && authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
     }
 
-    next()
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized. Please login again.",
+      });
+    }
 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token. Please login again.",
+      });
+    }
+
+    req.userId = decoded.id;
+    next();
   } catch (error) {
-    res.json({
-      success:false,
-      message:error.message
-    })   
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token.",
+    });
   }
-}
+};
 
-module.exports = userAuth
+module.exports = userAuth;

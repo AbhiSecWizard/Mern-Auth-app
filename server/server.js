@@ -23,13 +23,15 @@ app.use(cookieParser());
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://auth-mern-frontend-wnmb.vercel.app",
+    "https://authentication-app-5t7a.onrender.com",
+    
 ];
 
 app.use(
     cors({
         origin: allowedOrigins,
         credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
 
@@ -41,6 +43,13 @@ app.set("trust proxy", 1);
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+
+app.set("etag", false);
+
+app.use("/api", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 
 // ========================
 // Test Routes
