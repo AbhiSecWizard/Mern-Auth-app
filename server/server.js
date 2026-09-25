@@ -23,7 +23,7 @@ app.use(cookieParser());
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://authentication-app-5t7a.onrender.com",
+    "https://authentication-frontend-evo7.onrender.com",
     
 ];
 
